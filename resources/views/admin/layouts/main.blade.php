@@ -30,8 +30,13 @@
         </div>
 
     </div>
-
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script>
+        // Create lucide icons
+        lucide.createIcons();
+
+        // sidebar toggle code
         const sidebar = document.getElementById('sidebar');
         const toggleSidebarMobile = (sidebar, sidebarBackdrop, toggleSidebarMobileHamburger, toggleSidebarMobileClose) => {
             sidebar.classList.toggle('hidden');
