@@ -31,6 +31,15 @@ if (! function_exists('sidebarList')) {
                     'permission' => has_permission('admin.users-roles.view'),
                 ],
             ],
+            'Student Management' => [
+                'icon' => 'school',
+                'permission' => has_permission('admin.student-classes.view'),
+                'Student Classes' => [
+                    'icon' => 'circle',
+                    'route' => 'admin.student-classes.view',
+                    'permission' => has_permission('admin.student-classes.view'),
+                ],
+            ],
             'hr' => null,
         ];
     }
