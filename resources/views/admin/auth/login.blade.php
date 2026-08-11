@@ -22,6 +22,7 @@
                     Sign in to platform
                 </h2>
                 <form class="mt-8 space-y-6" action="{{ route('admin.login.post') }}" method="POST">
+                    @csrf
                     <div>
                         <label for="email" class="text-sm font-medium text-gray-900 block mb-2">Your email</label>
                         <input type="email" name="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full p-2.5" placeholder="name@company.com"
