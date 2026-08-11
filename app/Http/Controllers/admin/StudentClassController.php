@@ -5,182 +5,124 @@ namespace App\Http\Controllers\admin;
 use App\Http\Controllers\Controller;
 use App\Models\StudentClass;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class StudentClassController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, $level = null)
     {
-        $name = $request->query('name');
-        $level_two = $request->query('level_two');
+        $classes = StudentClass::where(function ($query) use ($request, $level) {
+            if ($level) {
+                $query->where('level_two', $level)
+                    ->orWhere('level_three', $level)
+                    ->orWhere('level_four', $level);
+            } else {
+                $query->whereNull('level_two');
+            }
 
-        $level = $level_two ? 3 : ($name ? 2 : 1);
+            if ($request->has('status')) {
+                $query->where('status', $request->status);
+            }
+            if ($request->has('search') && $request->search) {
+                $query->where('name', 'like', '%'.$request->search.'%');
+            }
+        })->paginate(20);
 
-        $classes = StudentClass::query()
-            ->when($level === 1, function ($query) {
-                $query->whereNull('level_two')->whereNull('level_three');
-            })
-            ->when($level === 2, function ($query) use ($name) {
-                $query->where('name', $name)->whereNull('level_three');
-            })
-            ->when($level === 3, function ($query) use ($name, $level_two) {
-                $query->where('name', $name)->where('level_two', $level_two);
-            })
-            ->orderBy('id')
-            ->get();
-
-        return view('admin.student-class.index', compact('classes', 'name', 'level_two', 'level'));
+        return view('admin.student-class.index', compact('classes', 'level'));
     }
 
-    public function create_page(Request $request)
+    public function create_page($parent_id = null)
     {
-        $name = $request->query('name');
-        $level_two = $request->query('level_two');
-        $level = $level_two ? 3 : ($name ? 2 : 1);
+        $categories = StudentClass::whereNull('parent_id')->orderBy('order')->get();
 
-        return view('admin.student-class.create', compact('name', 'level_two', 'level'));
+        return view('admin.student-class.create', compact('categories', 'parent_id'));
     }
 
     public function create(Request $request)
     {
-        $level = $request->integer('level', 1);
-
-        if ($level === 1) {
-            $request->validate([
-                'name' => 'required|string|max:255|unique:student_classes,name',
-            ]);
-            StudentClass::create(['name' => $request->name]);
-        } elseif ($level === 2) {
-            $request->validate([
-                'name' => 'required|string|max:255|exists:student_classes,name',
-                'level_two' => [
-                    'required',
-                    'string',
-                    'max:255',
-                    Rule::unique('student_classes', 'level_two')->where('name', $request->name)->whereNull('level_three'),
-                ],
-            ]);
-            StudentClass::create(['name' => $request->name, 'level_two' => $request->level_two]);
-        } else {
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'level_two' => 'required|string|max:255',
-                'level_three' => [
-                    'required',
-                    'string',
-                    'max:255',
-                    Rule::unique('student_classes', 'level_three')->where('name', $request->name)->where('level_two', $request->level_two),
-                ],
-            ]);
-            StudentClass::create([
-                'name' => $request->name,
-                'level_two' => $request->level_two,
-                'level_three' => $request->level_three,
-            ]);
+        $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name',
+            'description' => 'nullable|string|max:3000',
+            'parent_id' => 'nullable|integer|exists:categories,id',
+        ]);
+        $data = [
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+            'description' => $request->description,
+            'parent_id' => $request->parent_id,
+        ];
+        if ($request->file('image')) {
+            $data['images'] = upload_file($request->file('image'), 'categories');
         }
 
-        return $this->redirectToList($level, $request->name, $request->level_two)
-            ->with('success', 'Class created successfully.');
+        // return $data;
+        StudentClass::updateOrCreate($data);
+
+        return redirect()->route('admin.student-classes.view', ['parent_id' => $request->parent_id ?? null])->with('success', 'Category created successfully.');
     }
 
     public function edit($id)
     {
-        $class = StudentClass::findOrFail($id);
-        $level = $class->level_three ? 3 : ($class->level_two ? 2 : 1);
+        $category = StudentClass::findOrFail($id);
+        $categories = StudentClass::whereNull('parent_id')->orderBy('order')->get();
 
-        return view('admin.student-class.edit', compact('class', 'level'));
+        return view('admin.student-class.edit', compact('category', 'categories'));
     }
 
     public function update(Request $request)
     {
         $request->validate([
-            'id' => 'required|exists:student_classes,id',
-            'level' => 'required|in:1,2,3',
+            'name' => 'required|string|max:255|unique:categories,name,'.$request->id,
+            'description' => 'nullable|string|max:3000',
+            'parent_id' => 'nullable|integer|exists:categories,id',
+        ]);
+        $category = StudentClass::findOrFail($request->id);
+        $images = $category->images;
+        if ($request->file('image')) {
+            $images = upload_file($request->file('image'), 'categories');
+        }
+        $category->update([
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+            'description' => $request->description,
+            'parent_id' => $request->parent_id,
+            'images' => $images,
         ]);
 
-        $class = StudentClass::findOrFail($request->id);
-        $level = $request->integer('level');
-
-        if ($level === 1) {
-            $request->validate([
-                'name' => 'required|string|max:255|unique:student_classes,name,'.$class->id,
-            ]);
-            $oldName = $class->name;
-            $class->update(['name' => $request->name]);
-            StudentClass::where('name', $oldName)->where('id', '!=', $class->id)->update(['name' => $request->name]);
-        } elseif ($level === 2) {
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'level_two' => [
-                    'required',
-                    'string',
-                    'max:255',
-                    Rule::unique('student_classes', 'level_two')->where('name', $request->name)->whereNull('level_three')->ignore($class->id),
-                ],
-            ]);
-            $oldLevelTwo = $class->level_two;
-            $class->update(['level_two' => $request->level_two]);
-            StudentClass::where('name', $class->name)
-                ->where('level_two', $oldLevelTwo)
-                ->where('id', '!=', $class->id)
-                ->update(['level_two' => $request->level_two]);
-        } else {
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'level_two' => 'required|string|max:255',
-                'level_three' => [
-                    'required',
-                    'string',
-                    'max:255',
-                    Rule::unique('student_classes', 'level_three')
-                        ->where('name', $request->name)
-                        ->where('level_two', $request->level_two)
-                        ->ignore($class->id),
-                ],
-            ]);
-            $class->update(['level_three' => $request->level_three]);
-        }
-
-        return $this->redirectToList($level, $class->name, $class->level_two)
-            ->with('success', 'Class updated successfully.');
+        return redirect()->route('admin.student-classes.view', ['parent_id' => $category->parent_id ?? null])->with('success', 'Category updated successfully.');
     }
 
-    // Delete class and its children
+    // Delete user role
     public function delete(Request $request)
     {
         $request->validate([
-            'id' => 'required|exists:student_classes,id',
+            'id' => 'required|exists:categories,id',
         ]);
-        $class = StudentClass::findOrFail($request->id);
-        $level = $class->level_three ? 3 : ($class->level_two ? 2 : 1);
-
-        if ($level === 1) {
-            StudentClass::where('name', $class->name)->delete();
-        } elseif ($level === 2) {
-            StudentClass::where('name', $class->name)->where('level_two', $class->level_two)->delete();
-        } else {
-            $class->delete();
+        $category = StudentClass::findOrFail($request->id);
+        if ($category->Subcategories()->count() > 0) {
+            foreach ($category->Subcategories as $subcategory) {
+                if ($subcategory->images) {
+                    delete_files($subcategory->images);
+                }
+            }
         }
+        if ($category->images) {
+            delete_files($category->images);
+        }
+        $category->delete();
 
-        return redirect()->back()->with('success', 'Class deleted successfully.');
+        return redirect()->back()->with('success', 'Category deleted successfully.');
     }
 
-    // update status (not used by student classes)
+    // update status
     public function change_status(Request $request)
     {
-        return response()->json(['status' => false, 'message' => 'Not supported for student classes.']);
-    }
+        $request->validate([
+            'id' => 'required|exists:categories,id',
+        ]);
+        StudentClass::where('id', $request->id)->update([
+            'status' => ! $request->status,
+        ]);
 
-    private function redirectToList(int $level, ?string $name = null, ?string $levelTwo = null)
-    {
-        $params = [];
-        if ($level >= 2 && $name) {
-            $params['name'] = $name;
-        }
-        if ($level >= 3 && $levelTwo) {
-            $params['level_two'] = $levelTwo;
-        }
-
-        return redirect()->route('admin.student-classes.view', $params);
+        return response()->json(['status' => true, 'message' => translate('Category status update successfully!')]);
     }
 }

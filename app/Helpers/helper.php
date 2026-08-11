@@ -190,6 +190,8 @@ if (! function_exists('upload_file')) {
 if (! function_exists('translate')) {
     function translate(string $key): string
     {
+        return $key;
+
         return app(TranslationService::class)->translate($key);
     }
 }

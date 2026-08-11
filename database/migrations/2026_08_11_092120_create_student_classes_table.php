@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('student_classes', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('slug');
+            $table->text('description')->nullable();
             $table->string('level_two')->nullable();
             $table->string('level_three')->nullable();
             $table->string('level_four')->nullable();

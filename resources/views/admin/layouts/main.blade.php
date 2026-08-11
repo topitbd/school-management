@@ -12,7 +12,7 @@
         @vite('resources/css/app.css')
     @endif
     <script>
-        (function () {
+        (function() {
             const stored = localStorage.getItem('theme');
             if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
@@ -38,80 +38,14 @@
         </div>
 
     </div>
+
+    <!-- jQuery cdn -->
+    <script src="https://code.jquery.com/jquery-4.0.0.slim.min.js" integrity="sha256-8DGpv13HIm+5iDNWw1XqxgFB4mj+yOKFNb+tHBZOowc=" crossorigin="anonymous"></script>
     <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ asset('js/script.js') }}"></script>
     <script>
-        // Create lucide icons
         lucide.createIcons();
-
-        // sidebar dropdown toggles
-        document.querySelectorAll('[data-sidebar-toggle]').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                const menu = document.getElementById(btn.dataset.sidebarToggle);
-                if (menu) {
-                    menu.classList.toggle('hidden');
-                }
-                const chevron = btn.querySelector('[data-sidebar-chevron]');
-                if (chevron) {
-                    chevron.classList.toggle('rotate-180');
-                }
-            });
-        });
-
-        // dark mode toggle
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        const darkModeIcon = document.getElementById('darkModeIcon');
-        const lightModeIcon = document.getElementById('lightModeIcon');
-
-        const updateThemeIcons = () => {
-            const isDark = document.documentElement.classList.contains('dark');
-            darkModeIcon.classList.toggle('hidden', !isDark);
-            lightModeIcon.classList.toggle('hidden', isDark);
-        };
-        if (darkModeToggle) {
-            darkModeToggle.addEventListener('click', () => {
-                const isDark = document.documentElement.classList.toggle('dark');
-                localStorage.setItem('theme', isDark ? 'dark' : 'light');
-                updateThemeIcons();
-            });
-            updateThemeIcons();
-        }
-
-        // user dropdown toggle
-        const userDropdownToggle = document.getElementById('userDropdownToggle');
-        const userDropdown = document.getElementById('userDropdown');
-        if (userDropdownToggle && userDropdown) {
-            userDropdownToggle.addEventListener('click', (e) => {
-                e.stopPropagation();
-                userDropdown.classList.toggle('hidden');
-            });
-            document.addEventListener('click', () => {
-                userDropdown.classList.add('hidden');
-            });
-        }
-
-        // sidebar toggle code
-        const sidebar = document.getElementById('sidebar');
-        const toggleSidebarMobile = (sidebar, sidebarBackdrop, toggleSidebarMobileHamburger, toggleSidebarMobileClose) => {
-            sidebar.classList.toggle('hidden');
-            sidebarBackdrop.classList.toggle('hidden');
-            toggleSidebarMobileHamburger.classList.toggle('hidden');
-            toggleSidebarMobileClose.classList.toggle('hidden');
-        };
-        const toggleSidebarMobileEl = document.getElementById('toggleSidebarMobile');
-        const sidebarBackdrop = document.getElementById('sidebarBackdrop');
-        const toggleSidebarMobileHamburger = document.getElementById('toggleSidebarMobileHamburger');
-        const toggleSidebarMobileClose = document.getElementById('toggleSidebarMobileClose');
-        const toggleSidebarMobileSearch = document.getElementById('toggleSidebarMobileSearch');
-        toggleSidebarMobileSearch.addEventListener('click', () => {
-            toggleSidebarMobile(sidebar, sidebarBackdrop, toggleSidebarMobileHamburger, toggleSidebarMobileClose);
-        });
-        toggleSidebarMobileEl.addEventListener('click', () => {
-            toggleSidebarMobile(sidebar, sidebarBackdrop, toggleSidebarMobileHamburger, toggleSidebarMobileClose);
-        });
-        sidebarBackdrop.addEventListener('click', () => {
-            toggleSidebarMobile(sidebar, sidebarBackdrop, toggleSidebarMobileHamburger, toggleSidebarMobileClose);
-        });
     </script>
 </body>
 
