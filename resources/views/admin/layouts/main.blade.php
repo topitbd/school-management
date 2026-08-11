@@ -11,19 +11,27 @@
     @else
         @vite('resources/css/app.css')
     @endif
+    <script>
+        (function () {
+            const stored = localStorage.getItem('theme');
+            if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
 </head>
 
-<body class="bg-gray-50 antialiased">
+<body class="bg-gray-50 antialiased dark:bg-gray-900">
 
     <!-- Navbar -->
     @include('admin.layouts.navbar')
 
-    <div class="flex overflow-hidden bg-white pt-16">
+    <div class="flex overflow-hidden bg-white pt-16 dark:bg-gray-800">
         <!-- Sidebar -->
         @include('admin.layouts.sidebar')
 
         <!-- Main content -->
-        <div id="main-content" class="h-full w-full bg-gray-50 relative overflow-y-auto lg:ml-64">
+        <div id="main-content" class="h-full w-full bg-gray-50 relative overflow-y-auto lg:ml-64 dark:bg-gray-900">
             <main>
                 @yield('content')
             </main>
@@ -35,6 +43,38 @@
     <script>
         // Create lucide icons
         lucide.createIcons();
+
+        // dark mode toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const darkModeIcon = document.getElementById('darkModeIcon');
+        const lightModeIcon = document.getElementById('lightModeIcon');
+
+        const updateThemeIcons = () => {
+            const isDark = document.documentElement.classList.contains('dark');
+            darkModeIcon.classList.toggle('hidden', !isDark);
+            lightModeIcon.classList.toggle('hidden', isDark);
+        };
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                updateThemeIcons();
+            });
+            updateThemeIcons();
+        }
+
+        // user dropdown toggle
+        const userDropdownToggle = document.getElementById('userDropdownToggle');
+        const userDropdown = document.getElementById('userDropdown');
+        if (userDropdownToggle && userDropdown) {
+            userDropdownToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+            document.addEventListener('click', () => {
+                userDropdown.classList.add('hidden');
+            });
+        }
 
         // sidebar toggle code
         const sidebar = document.getElementById('sidebar');
