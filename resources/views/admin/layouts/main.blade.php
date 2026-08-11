@@ -44,6 +44,20 @@
         // Create lucide icons
         lucide.createIcons();
 
+        // sidebar dropdown toggles
+        document.querySelectorAll('[data-sidebar-toggle]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const menu = document.getElementById(btn.dataset.sidebarToggle);
+                if (menu) {
+                    menu.classList.toggle('hidden');
+                }
+                const chevron = btn.querySelector('[data-sidebar-chevron]');
+                if (chevron) {
+                    chevron.classList.toggle('rotate-180');
+                }
+            });
+        });
+
         // dark mode toggle
         const darkModeToggle = document.getElementById('darkModeToggle');
         const darkModeIcon = document.getElementById('darkModeIcon');

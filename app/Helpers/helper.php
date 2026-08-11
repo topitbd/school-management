@@ -31,6 +31,7 @@ if (! function_exists('sidebarList')) {
                     'permission' => has_permission('admin.users-roles.view'),
                 ],
             ],
+            'hr' => null,
         ];
     }
 }
