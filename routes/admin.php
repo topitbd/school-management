@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\admin\DashboardController;
 use App\Http\Controllers\admin\LoginController;
+use App\Http\Controllers\admin\StudentClassController;
 use App\Http\Controllers\admin\UserController;
 use App\Http\Controllers\admin\UserRoleController;
 use Illuminate\Support\Facades\Route;
@@ -37,5 +38,17 @@ Route::middleware(['web', 'AdminMiddleware'])->prefix('admin')->group(function (
         Route::post('/users-update', 'update')->name('admin.users.update');
         Route::post('/users-delete', 'delete')->name('admin.users.delete');
         Route::post('/users-bulk-delete', 'bulkDelete')->name('admin.users.bulkDelete');
+    });
+    // *******************Student management routes *********************************
+    // student class
+    // User roles and permissions routes
+    Route::controller(StudentClassController::class)->group(function () {
+        Route::get('/student-classes', 'index')->name('admin.student-classes.view');
+        Route::get('/student-classes/create', 'create_page')->name('admin.student-classes.createPage');
+        Route::post('/student-classes/create', 'create')->name('admin.student-classes.create');
+        Route::post('/student-classes/status', 'change_status')->name('admin.student-classes.status');
+        Route::get('/student-classes-edit/{id}', 'edit')->name('admin.student-classes.edit');
+        Route::post('/student-classes-update', 'update')->name('admin.student-classes.update');
+        Route::post('/student-classes-delete', 'delete')->name('admin.student-classes.delete');
     });
 });
